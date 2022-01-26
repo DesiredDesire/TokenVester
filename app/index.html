@@ -1,0 +1,261 @@
+<!DOCTYPE html> 
+<html> 
+ 
+<head> 
+  <title> ERC20Vester App </title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+        type="application/javascript"></script>
+</head> 
+
+
+<body> 
+
+  <h1>ERC20Vester App</h1> 
+
+  <h2>Connect To Wallet</h2>
+
+  <button
+    id ="connectButton"
+    onclick = "clickConnectButton();">Connect</button>
+  </body>
+  
+  <p1 id = 'state'> Not connected yet </p1>
+
+  <h2>Vesting (only owner)</h2>
+
+  <label> address:</label>
+  <input type="text" id="claimer" required
+       minlength="42" maxlength="42" size="42">
+  <label> amount:</label>
+  <input type="text" id="amount" required
+       minlength="42" maxlength="42" size="42">
+  <button
+    id ="vestButton"
+    onclick = "clickVestButton()">Vest
+  </button>
+
+  <h2>Claim</h2>
+  <button
+    id ="claimButton"
+    onclick = "clickClaimButton()">Claim
+  </button>
+
+
+  </body>
+ 
+<script language='javascript'>
+  const vesterAddresss = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e';
+  const E18 = ethers.BigNumber.from(10).pow(18);
+  let provider = null;
+  let signer = null;
+  let accounts = null;
+  let account = null;
+  let contract = null;
+
+  const state = document.getElementById('state'); 
+  const connectButton = document.getElementById('connectButton'); 
+  const claimerInput = document.getElementById('claimer'); 
+  const amountInput = document.getElementById('amount'); 
+
+
+  async function clickConnectButton(){
+    if (window.ethereum && !accounts) {
+      provider = await new ethers.providers.Web3Provider(window.ethereum);
+      signer = await provider.getSigner();
+      accounts = await provider.send("eth_requestAccounts",[]);
+      account = accounts[0]
+      state.innerText = `connected with: ${account}`;
+      connectButton.innerText = 'already connected';
+    }
+  }
+
+  
+  async function clickVestButton(){
+    if(!contract) { 
+      contract = await new ethers.Contract(vesterAddresss, vesterABI, provider);
+      signedContract = await contract.connect(signer);
+    }
+    if(accounts){
+      const claimer = claimerInput.value;
+      const amount = amountInput.value;
+      const tx = await signedContract.vest(claimer,ethers.BigNumber.from(amount).mul(E18));
+      console.log(tx);
+    }
+  }
+
+  async function clickClaimButton(){
+    if(!contract) { 
+      contract = await new ethers.Contract(vesterAddresss, vesterABI, provider);
+      signedContract = await contract.connect(signer);
+    }
+    if(accounts){
+      const tx = await signedContract.claim();
+      console.log(tx);
+    }
+  }
+
+
+  const vesterABI = [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress_",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "vestingPeriod_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "tokenAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "vest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "vestingPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "vestings",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountTotal",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "released",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+</script>
+ 
+</html>
+
