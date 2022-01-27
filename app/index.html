@@ -44,12 +44,12 @@
   </body>
  
 <script language='javascript'>
-  const vesterAddresss = '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e';
+  const vesterAddresss = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
   const E18 = ethers.BigNumber.from(10).pow(18);
   let provider = null;
   let signer = null;
   let accounts = null;
-  let account = null;
+  let currentAccount = null;
   let contract = null;
 
   const state = document.getElementById('state'); 
@@ -58,15 +58,21 @@
   const amountInput = document.getElementById('amount'); 
 
 
+
   async function clickConnectButton(){
-    if (window.ethereum && !accounts) {
-      provider = await new ethers.providers.Web3Provider(window.ethereum);
+      if(!window.ethereum) {
+        alert('install wallet');
+        return
+      }
+      if(provider == null) {
+        provider = await new ethers.providers.Web3Provider(window.ethereum);
+      } 
       signer = await provider.getSigner();
       accounts = await provider.send("eth_requestAccounts",[]);
-      account = accounts[0]
-      state.innerText = `connected with: ${account}`;
+      currentAccount = accounts[0]
+      state.innerText = `connected with: ${currentAccount}`;
       connectButton.innerText = 'already connected';
-    }
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
   }
 
   
@@ -83,6 +89,7 @@
     }
   }
 
+
   async function clickClaimButton(){
     if(!contract) { 
       contract = await new ethers.Contract(vesterAddresss, vesterABI, provider);
@@ -94,6 +101,18 @@
     }
   }
 
+  async function handleAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+      console.log('Please connect to MetaMask.');
+    }  else if (accounts[0] !== currentAccount) {
+      currentAccount = accounts[0];
+      console.log('accountchanged');
+      signer = await provider.getSigner();
+      accounts = await provider.send("eth_requestAccounts",[]);
+      currentAccount = accounts[0]
+      state.innerText = `connected with: ${currentAccount}`;
+    }
+  }
 
   const vesterABI = [
     {
@@ -258,4 +277,3 @@
 </script>
  
 </html>
-
